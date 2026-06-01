@@ -167,7 +167,7 @@ body::before {
   <header class="header">
     <div class="header-eyebrow">Base de conocimiento técnico</div>
     <h1>Errores comunes<br>por modelo de equipo</h1>
-    <p>Consulta problemas frecuentes, códigos de error y soluciones recomendadas para cada modelo.</p>
+    <p>Consulta problemas frecuentes, códigos de error y soluciones recomendadas para cada modelo que representa Equiposlab.</p>
     <div class="status-pill">
       <span class="status-dot"></span>
       <span id="status-text">Cargando datos...</span>
@@ -249,8 +249,9 @@ const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tq
 // Iconos por marca (agrega las que uses)
 const BRAND_ICONS = {
   default: '🔧',
-  'dymind': '🩸', 'mindray': '🏥', 'sysmex': '⚙️',
-  'abbott': '🔬', 'roche': '💊', 'beckman': '🧪',
+  'DYMIND': '🩸', 'BIOBASE': '🏥', 'HOTGEN': '⚙️',
+  'ANBIO': '🔬', 'MERIL': '💊', 'ILONGCARE': '🧪',
+  'SEAMATY': '🧪','EPL': '🧪',
 };
 function brandIcon(name) {
   return BRAND_ICONS[(name||'').toLowerCase()] || BRAND_ICONS.default;
@@ -286,11 +287,11 @@ async function loadData() {
     document.getElementById('brand-grid').innerHTML = `
       <div class="state-box" style="grid-column:1/-1">
         <i class="ti ti-alert-triangle" aria-hidden="true"></i>
-        <p>No se pudo conectar con Google Sheets.</p>
+        <p>No se pudo conectar con DB GS.</p>
         <div class="config-note">
           1. Abre el archivo <strong>index.html</strong><br>
           2. Reemplaza <strong>TU_SHEET_ID_AQUI</strong> con el ID de tu sheet<br>
-          3. Asegúrate de que el Sheet sea público (compartir → cualquier persona con el enlace)
+          3. Asegúrate de que el DB sea público PARA GIT (compartir → cualquier persona con el enlace)
         </div>
       </div>`;
   }
