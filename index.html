@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Errores por Modelo de Equipo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+  :root {
+    --bg: #F7F6F2;
+    --surface: #FFFFFF;
+    --surface2: #EFEFEA;
+    --border: #D8D7D0;
+    --text: #1A1A18;
+    --text2: #6B6B65;
+    --text3: #9B9B94;
+    --accent: #1A3A6B;
+    --accent-light: #E6EDF7;
+    --alta-bg: #FFF0EE; --alta-text: #8B2500;
+    --media-bg: #FFF8E6; --media-text: #7A4500;
+    --baja-bg: #EDFAF2; --baja-text: #165C35;
+    --font: 'IBM Plex Sans', sans-serif;
+    --mono: 'IBM Plex Mono', monospace;
+    --radius: 6px;
+    --radius-lg: 10px;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--font); background: var(--bg); color: var(--text); min-height: 100vh; font-size: 14px; line-height: 1.6; }
+
+  /* Layout */
+  .page { max-width: 1100px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
+
+  /* Header */
+  .site-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 2rem; padding-bottom: 1.5rem; border-bottom: 1px solid var(--border); }
+  .site-header-left h1 { font-size: 22px; font-weight: 600; letter-spacing: -0.5px; color: var(--text); }
+  .site-header-left p { font-size: 13px; color: var(--text2); margin-top: 3px; }
+  .tag { display: inline-block; font-family: var(--mono); font-size: 10px; background: var(--accent); color: #fff; padding: 2px 8px; border-radius: 3px; letter-spacing: 0.5px; margin-left: 10px; vertical-align: 2px; }
+
+  /* Metrics */
+  .metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 1.75rem; }
+  .metric { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 1rem 1.25rem; }
+  .metric-label { font-size: 11px; font-family: var(--mono); text-transform: uppercase; letter-spacing: 0.6px; color: var(--text2); margin-bottom: 6px; }
+  .metric-value { font-size: 28px; font-weight: 600; font-family: var(--mono); color: var(--text); line-height: 1; }
+  .metric-value.alta { color: #8B2500; }
+
+  /* Controls */
+  .controls { display: flex; gap: 8px; margin-bottom: 1.25rem; flex-wrap: wrap; align-items: center; }
+  .controls input, .controls select {
+    font-family: var(--font); font-size: 13px; height: 36px; padding: 0 12px;
+    border: 1px solid var(--border); border-radius: var(--radius);
+    background: var(--surface); color: var(--text); outline: none;
+    transition: border-color 0.15s;
+  }
+  .controls input { flex: 1; min-width: 200px; }
+  .controls input:focus, .controls select:focus { border-color: var(--accent); }
+  .btn-add {
+    display: flex; align-items: center; gap: 6px; height: 36px; padding: 0 16px;
+    background: var(--accent); color: #fff; border: none; border-radius: var(--radius);
+    font-family: var(--font); font-size: 13px; font-weight: 500; cursor: pointer;
+    transition: opacity 0.15s; white-space: nowrap;
+  }
+  .btn-add:hover { opacity: 0.88; }
+
+  /* Chart */
+  .chart-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 1.25rem; margin-bottom: 1.25rem; }
+  .chart-card-title { font-size: 12px; font-family: var(--mono); text-transform: uppercase; letter-spacing: 0.6px; color: var(--text2); margin-bottom: 1rem; }
+
+  /* Table */
+  .table-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  thead { background: var(--surface2); }
+  th { padding: 10px 14px; text-align: left; font-weight: 500; font-size: 11px; font-family: var(--mono); text-transform: uppercase; letter-spacing: 0.5px; color: var(--text2); border-bottom: 1px solid var(--border); white-space: nowrap; }
+  td { padding: 11px 14px; color: var(--text); border-bottom: 1px solid var(--border); vertical-align: top; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--bg); }
+  .model-cell { font-family: var(--mono); font-size: 12px; font-weight: 500; color: var(--accent); }
+  .freq-cell { font-family: var(--mono); font-weight: 500; }
+  .sol-cell { color: var(--text2); max-width: 240px; font-size: 12px; line-height: 1.5; }
+
+  /* Badges */
+  .badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 9px; border-radius: 3px; font-size: 11px; font-family: var(--mono); font-weight: 500; }
+  .badge-alta { background: var(--alta-bg); color: var(--alta-text); }
+  .badge-media { background: var(--media-bg); color: var(--media-text); }
+  .badge-baja { background: var(--baja-bg); color: var(--baja-text); }
+
+  /* Delete button */
+  .btn-del { border: none; background: none; color: var(--text3); cursor: pointer; padding: 4px; border-radius: 4px; font-size: 16px; display: flex; align-items: center; transition: color 0.15s, background 0.15s; }
+  .btn-del:hover { color: #8B2500; background: var(--alta-bg); }
+
+  /* Empty state */
+  .empty { text-align: center; padding: 3rem 1rem; color: var(--text2); }
+  .empty i { font-size: 28px; display: block; margin-bottom: 8px; color: var(--text3); }
+  .empty p { font-size: 13px; }
+
+  /* Modal */
+  .modal-bg { display: none; position: fixed; inset: 0; background: rgba(10,10,8,0.4); z-index: 200; align-items: center; justify-content: center; padding: 1rem; }
+  .modal-bg.open { display: flex; }
+  .modal { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 1.75rem; width: 100%; max-width: 500px; }
+  .modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; }
+  .modal-header h2 { font-size: 16px; font-weight: 600; }
+  .btn-close { border: none; background: none; font-size: 20px; color: var(--text2); cursor: pointer; padding: 2px; }
+  .field { margin-bottom: 1rem; }
+  .field label { display: block; font-size: 11px; font-family: var(--mono); text-transform: uppercase; letter-spacing: 0.5px; color: var(--text2); margin-bottom: 5px; }
+  .field input, .field select, .field textarea {
+    width: 100%; font-family: var(--font); font-size: 13px; padding: 8px 12px;
+    border: 1px solid var(--border); border-radius: var(--radius);
+    background: var(--bg); color: var(--text); outline: none; transition: border-color 0.15s;
+  }
+  .field input:focus, .field select:focus, .field textarea:focus { border-color: var(--accent); background: var(--surface); }
+  .field textarea { resize: vertical; min-height: 80px; }
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 1.5rem; }
+  .btn-cancel { font-family: var(--font); font-size: 13px; padding: 0 16px; height: 36px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); color: var(--text2); cursor: pointer; }
+  .btn-cancel:hover { background: var(--surface2); }
+  .btn-save { font-family: var(--font); font-size: 13px; font-weight: 500; padding: 0 20px; height: 36px; background: var(--accent); color: #fff; border: none; border-radius: var(--radius); cursor: pointer; transition: opacity 0.15s; }
+  .btn-save:hover { opacity: 0.88; }
+  .error-msg { font-size: 11px; color: #8B2500; margin-top: 4px; display: none; }
+
+  /* Footer */
+  .footer { text-align: center; margin-top: 2.5rem; font-size: 11px; font-family: var(--mono); color: var(--text3); letter-spacing: 0.3px; }
+
+  @media (max-width: 640px) {
+    .metrics { grid-template-columns: repeat(2, 1fr); }
+    .site-header { flex-direction: column; gap: 0.5rem; }
+    .field-row { grid-template-columns: 1fr; }
+    .controls { flex-direction: column; }
+    .controls input { min-width: 100%; }
+    th:nth-child(5), td:nth-child(5) { display: none; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="site-header">
+    <div class="site-header-left">
+      <h1>Errores por modelo de equipo <span class="tag">PÚBLICO</span></h1>
+      <p>Registro de errores frecuentes, severidad y soluciones recomendadas</p>
+    </div>
+    <button class="btn-add" onclick="openModal()">
+      <i class="ti ti-plus" aria-hidden="true"></i> Agregar error
+    </button>
+  </header>
+
+  <div class="metrics">
+    <div class="metric"><div class="metric-label">Total errores</div><div class="metric-value" id="m-total">0</div></div>
+    <div class="metric"><div class="metric-label">Modelos</div><div class="metric-value" id="m-models">0</div></div>
+    <div class="metric"><div class="metric-label">Frecuencia total</div><div class="metric-value" id="m-freq">0</div></div>
+    <div class="metric"><div class="metric-label">Severidad alta</div><div class="metric-value alta" id="m-alta">0</div></div>
+  </div>
+
+  <div class="controls">
+    <input type="text" id="search" placeholder="&#xe9d0;  Buscar modelo o error..." style="padding-left:14px">
+    <select id="filt-sev">
+      <option value="">Todas las severidades</option>
+      <option value="Alta">Alta</option>
+      <option value="Media">Media</option>
+      <option value="Baja">Baja</option>
+    </select>
+    <select id="filt-model"><option value="">Todos los modelos</option></select>
+  </div>
+
+  <div class="chart-card">
+    <div class="chart-card-title">Frecuencia acumulada por modelo</div>
+    <div style="position:relative;height:180px">
+      <canvas id="freqChart" role="img" aria-label="Gráfica de barras con frecuencia de errores por modelo de equipo"></canvas>
+    </div>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Modelo</th>
+          <th>Error</th>
+          <th>Frec.</th>
+          <th>Severidad</th>
+          <th>Solución</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+
+  <p class="footer">Actualizado localmente en tu navegador — los datos se guardan en este dispositivo</p>
+</div>
+
+<!-- Modal -->
+<div class="modal-bg" id="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="modal-title">Registrar nuevo error</h2>
+      <button class="btn-close" onclick="closeModal()" aria-label="Cerrar">
+        <i class="ti ti-x" aria-hidden="true"></i>
+      </button>
+    </div>
+    <div class="field">
+      <label>Modelo de equipo *</label>
+      <input id="f-model" placeholder="Ej: Impresora HP LaserJet M404">
+      <div class="error-msg" id="err-model">Este campo es requerido</div>
+    </div>
+    <div class="field">
+      <label>Nombre del error *</label>
+      <input id="f-error" placeholder="Ej: Atasco de papel en bandeja 2">
+      <div class="error-msg" id="err-error">Este campo es requerido</div>
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label>Frecuencia (veces)</label>
+        <input id="f-freq" type="number" min="1" value="1">
+      </div>
+      <div class="field">
+        <label>Severidad</label>
+        <select id="f-sev">
+          <option value="Alta">Alta</option>
+          <option value="Media" selected>Media</option>
+          <option value="Baja">Baja</option>
+        </select>
+      </div>
+    </div>
+    <div class="field">
+      <label>Solución / acción recomendada</label>
+      <textarea id="f-sol" placeholder="Describe cómo resolver o mitigar este error..."></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
+      <button class="btn-save" onclick="saveEntry()">Guardar error</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const STORAGE_KEY = 'errores_equipos_v1';
+  let data = [];
+  let chart = null;
+  const COLORS = ['#1A3A6B','#0F6E56','#7A3500','#5C1A5C','#165C35','#3A3A6B','#6B1A1A','#3A5C00'];
+
+  function load() {
+    try { data = JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; } catch(e) { data = []; }
+  }
+  function save() { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); }
+
+  function openModal() { document.getElementById('modal').classList.add('open'); document.getElementById('f-model').focus(); }
+  function closeModal() { document.getElementById('modal').classList.remove('open'); clearForm(); }
+  function clearForm() {
+    ['f-model','f-error','f-sol'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('f-freq').value = 1;
+    document.getElementById('f-sev').value = 'Media';
+    ['err-model','err-error'].forEach(id => document.getElementById(id).style.display = 'none');
+  }
+
+  function saveEntry() {
+    const model = document.getElementById('f-model').value.trim();
+    const error = document.getElementById('f-error').value.trim();
+    const freq = Math.max(1, parseInt(document.getElementById('f-freq').value) || 1);
+    const sev = document.getElementById('f-sev').value;
+    const sol = document.getElementById('f-sol').value.trim();
+    let valid = true;
+    if (!model) { document.getElementById('err-model').style.display = 'block'; valid = false; }
+    else { document.getElementById('err-model').style.display = 'none'; }
+    if (!error) { document.getElementById('err-error').style.display = 'block'; valid = false; }
+    else { document.getElementById('err-error').style.display = 'none'; }
+    if (!valid) return;
+    data.push({ model, error, freq, sev, sol, id: Date.now() });
+    save();
+    closeModal();
+    render();
+  }
+
+  function deleteEntry(id) {
+    if (!confirm('¿Eliminar este registro?')) return;
+    data = data.filter(d => d.id !== id);
+    save();
+    render();
+  }
+
+  function getFiltered() {
+    const q = document.getElementById('search').value.toLowerCase();
+    const fs = document.getElementById('filt-sev').value;
+    const fm = document.getElementById('filt-model').value;
+    return data.filter(d => {
+      const mq = !q || d.model.toLowerCase().includes(q) || d.error.toLowerCase().includes(q) || d.sol.toLowerCase().includes(q);
+      const ms = !fs || d.sev === fs;
+      const mm = !fm || d.model === fm;
+      return mq && ms && mm;
+    });
+  }
+
+  function sevBadge(s) {
+    const cls = s === 'Alta' ? 'badge-alta' : s === 'Media' ? 'badge-media' : 'badge-baja';
+    const dot = s === 'Alta' ? '●' : s === 'Media' ? '◑' : '○';
+    return `<span class="badge ${cls}">${dot} ${s}</span>`;
+  }
+
+  function esc(s) {
+    return (s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  function render() {
+    const filtered = getFiltered();
+    const models = [...new Set(data.map(d => d.model))];
+
+    const fmod = document.getElementById('filt-model');
+    const cur = fmod.value;
+    fmod.innerHTML = '<option value="">Todos los modelos</option>' +
+      models.map(m => `<option value="${esc(m)}"${m === cur ? ' selected' : ''}>${esc(m)}</option>`).join('');
+
+    const totalFreq = data.reduce((a, d) => a + d.freq, 0);
+    const altaCount = data.filter(d => d.sev === 'Alta').length;
+    document.getElementById('m-total').textContent = data.length;
+    document.getElementById('m-models').textContent = models.length;
+    document.getElementById('m-freq').textContent = totalFreq;
+    document.getElementById('m-alta').textContent = altaCount;
+
+    const tbody = document.getElementById('tbody');
+    if (!filtered.length) {
+      tbody.innerHTML = `<tr><td colspan="6"><div class="empty">
+        <i class="ti ti-${data.length ? 'filter-off' : 'clipboard-list'}" aria-hidden="true"></i>
+        <p>${data.length ? 'Sin resultados para los filtros actuales.' : 'Aún no hay errores registrados.<br>Haz clic en <strong>Agregar error</strong> para comenzar.'}</p>
+      </div></td></tr>`;
+    } else {
+      tbody.innerHTML = filtered.map(d => `
+        <tr>
+          <td class="model-cell">${esc(d.model)}</td>
+          <td>${esc(d.error)}</td>
+          <td class="freq-cell">${d.freq}</td>
+          <td>${sevBadge(d.sev)}</td>
+          <td class="sol-cell">${d.sol ? esc(d.sol) : '<span style="color:var(--text3)">—</span>'}</td>
+          <td><button class="btn-del" onclick="deleteEntry(${d.id})" aria-label="Eliminar registro"><i class="ti ti-trash" aria-hidden="true"></i></button></td>
+        </tr>`).join('');
+    }
+
+    // Chart
+    const modelFreq = {};
+    data.forEach(d => { modelFreq[d.model] = (modelFreq[d.model] || 0) + d.freq; });
+    const labels = Object.keys(modelFreq);
+    const values = labels.map(l => modelFreq[l]);
+
+    if (chart) { chart.destroy(); chart = null; }
+    if (labels.length) {
+      chart = new Chart(document.getElementById('freqChart'), {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [{
+            data: values,
+            backgroundColor: labels.map((_, i) => COLORS[i % COLORS.length]),
+            borderRadius: 4,
+            borderSkipped: false
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ` ${ctx.parsed.y} ocurrencias` } } },
+          scales: {
+            x: { grid: { display: false }, ticks: { font: { family: "'IBM Plex Mono'", size: 11 }, color: '#6B6B65' } },
+            y: { grid: { color: 'rgba(0,0,0,0.06)' }, ticks: { stepSize: 1, font: { family: "'IBM Plex Mono'", size: 11 }, color: '#6B6B65' } }
+          }
+        }
+      });
+    }
+  }
+
+  document.getElementById('search').oninput = render;
+  document.getElementById('filt-sev').onchange = render;
+  document.getElementById('filt-model').onchange = render;
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+  load();
+  render();
+</script>
+</body>
+</html>
